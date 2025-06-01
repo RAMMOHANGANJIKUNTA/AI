@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, of } from 'rxjs'; // 'throwError' is removed as it's no longer used by handleError
+import { catchError, tap } from 'rxjs/operators';
 import { StockItem } from '../models/stock-item.model';
 
 @Injectable({
@@ -7,24 +9,28 @@ import { StockItem } from '../models/stock-item.model';
 })
 export class StockDataService {
 
-  private mockNifty50Stocks: StockItem[] = [
-    { symbol: 'RELIANCE', name: 'Reliance Industries Ltd.', currentPrice: 2950.75, change: 15.20, changePercentage: 0.52 },
-    { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd.', currentPrice: 1450.00, change: -5.50, changePercentage: -0.38 },
-    { symbol: 'INFY', name: 'Infosys Ltd.', currentPrice: 1620.90, change: 25.40, changePercentage: 1.59 },
-    { symbol: 'ICICIBANK', name: 'ICICI Bank Ltd.', currentPrice: 1080.30, change: 2.10, changePercentage: 0.19 },
-    { symbol: 'TCS', name: 'Tata Consultancy Services Ltd.', currentPrice: 3900.00, change: -10.75, changePercentage: -0.28 }
-    // Add more Nifty 50 stocks here later if needed
-  ];
+  private nifty50ApiUrl = '/api/nifty50-stocks';
 
-  constructor() { }
+  constructor(private http: HttpClient) { }
 
   getNifty50Stocks(): Observable<StockItem[]> {
-    return of(this.mockNifty50Stocks);
+    console.log('StockDataService: Attempting to fetch live data from backend at ' + this.nifty50ApiUrl);
+    return this.http.get<StockItem[]>(this.nifty50ApiUrl)
+      .pipe(
+        tap(data => console.log('StockDataService: Fetched data:', data)),
+        catchError(this.handleError) // Error handled by returning an empty array
+      );
   }
 
-  // Later, we can add methods to fetch real data, e.g.:
-  // getRealNifty50Stocks(): Observable<StockItem[]> {
-  //   // HttpClinet logic here
-  //   return this.httpClient.get<StockItem[]>('your-api-endpoint/nifty50');
-  // }
+  private handleError(error: HttpErrorResponse): Observable<StockItem[]> { // Changed return type
+    let errorMessage = 'An unknown error occurred!';
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Client-side error: ${error.error.message}`;
+    } else {
+      errorMessage = `Backend returned code ${error.status}, body was: ${JSON.stringify(error.error)}`;
+    }
+    console.error('StockDataService: Error fetching stocks -', errorMessage);
+    // Return an empty array to allow the component to display an empty list or a specific message.
+    return of([]); // Return Observable of empty array
+  }
 }

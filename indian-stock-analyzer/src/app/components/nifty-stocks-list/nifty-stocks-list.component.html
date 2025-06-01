@@ -1,32 +1,37 @@
 <div class="nifty-stocks-container">
   <h2>Nifty 50 Stocks</h2>
-  <table class="stocks-table" *ngIf="niftyStocks$ | async as stocks; else loading">
-    <thead>
-      <tr>
-        <th>Symbol</th>
-        <th>Name</th>
-        <th>Current Price</th>
-        <th>Change</th>
-        <th>Change %</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let stock of stocks">
-        <td>{{ stock.symbol }}</td>
-        <td>{{ stock.name }}</td>
-        <td [ngClass]="{'positive': stock.change > 0, 'negative': stock.change < 0}">
-          {{ stock.currentPrice | number:'1.2-2' }}
-        </td>
-        <td [ngClass]="{'positive': stock.change > 0, 'negative': stock.change < 0}">
-          {{ stock.change | number:'1.2-2' }}
-        </td>
-        <td [ngClass]="{'positive': stock.changePercentage > 0, 'negative': stock.changePercentage < 0}">
-          {{ stock.changePercentage | number:'1.2-2' }}%
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <ng-template #loading>
-    <p>Loading stocks...</p>
+  <div *ngIf="niftyStocks$ | async as stocks; else loadingOrError">
+    <table class="stocks-table" *ngIf="stocks.length > 0; else noData">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Name</th>
+          <th>Current Price</th>
+          <th>Change</th>
+          <th>Change %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let stock of stocks">
+          <td>{{ stock.symbol }}</td>
+          <td>{{ stock.name }}</td>
+          <td [ngClass]="{'positive': stock.change > 0, 'negative': stock.change < 0}">
+            {{ stock.currentPrice | number:'1.2-2' }}
+          </td>
+          <td [ngClass]="{'positive': stock.change > 0, 'negative': stock.change < 0}">
+            {{ stock.change | number:'1.2-2' }}
+          </td>
+          <td [ngClass]="{'positive': stock.changePercentage > 0, 'negative': stock.changePercentage < 0}">
+            {{ stock.changePercentage | number:'1.2-2' }}%
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noData>
+      <p class="info-message">No stock data is currently available. This might be due to a temporary issue with fetching data, or no data is available at the source.</p>
+    </ng-template>
+  </div>
+  <ng-template #loadingOrError>
+    <p class="info-message">Loading stock data...</p>
   </ng-template>
 </div>
